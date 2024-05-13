@@ -140,27 +140,20 @@ impl<'a> Application<'a> {
         })
     }
 
-    fn get_icon_from_path(icon_path: &str) -> Result<Icon, Box<dyn Error>> {
+    /// Set application icon. Also sets icon for every window in the application.
+    pub fn with_icon(mut self, icon: &[u8]) -> Self {
+        info!("Loading icon");
+
         let (icon_rgba, icon_width, icon_height) = {
-            let image = image::io::Reader::open(icon_path)?.decode()?.into_rgba8();
+            let image = image::load_from_memory(icon)
+                .expect("Failed to load icon image")
+                .into_rgba8();
             let (width, height) = image.dimensions();
             let rgba = image.into_raw();
             (rgba, width, height)
         };
 
-        Ok(Icon::from_rgba(icon_rgba, icon_width, icon_height)?)
-    }
-
-    /// Set application icon. Also sets icon for every window in the application.
-    pub fn with_icon(mut self, icon_path: &'a str) -> Self {
-        info!("Loading icon: {icon_path}");
-        self.icon = match Self::get_icon_from_path(icon_path) {
-            Ok(icon) => Some(icon),
-            Err(err) => {
-                warn!("Error while trying to load icon: {err}");
-                None
-            }
-        };
+        self.icon = Some(Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to create icon"));
 
         for window_state in self.windows.values() {
             window_state.window.set_window_icon(self.icon.clone());

@@ -20,7 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create runtime");
 
     info!("Creating application instance");
-    let mut app = Application::new("Envi", &rt)?.with_icon("assets/icon.png");
+    let icon = include_bytes!("../assets/icon.png");
+    let mut app = Application::new("Envi", &rt)?.with_icon(icon);
 
     info!("Creating event loop");
     let event_loop = EventLoop::<UserEvent>::with_user_event().build()?;
