@@ -154,10 +154,9 @@ impl<'a> Application<'a> {
         };
 
         self.icon = Some(Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to create icon"));
-
-        for window_state in self.windows.values() {
-            window_state.window.set_window_icon(self.icon.clone());
-        }
+        self.windows
+            .values()
+            .for_each(|winstate| winstate.window.set_window_icon(self.icon.clone()));
 
         self
     }
@@ -218,16 +217,11 @@ impl<'a> ApplicationHandler<UserEvent> for Application<'a> {
         info!("Window Event: {event:?}");
 
         match event {
-            WindowEvent::CloseRequested
-            | WindowEvent::KeyboardInput {
-                event:
-                    KeyEvent {
-                        state: ElementState::Pressed,
-                        physical_key: PhysicalKey::Code(KeyCode::Escape),
-                        ..
-                    },
-                ..
-            } => self.close_window(event_loop, &window_id),
+            WindowEvent::CloseRequested => self.close_window(event_loop, &window_id),
+            WindowEvent::RedrawRequested => self
+                .windows
+                .values()
+                .for_each(|win| win.window.as_ref().request_redraw()),
             _ => {}
         }
     }
